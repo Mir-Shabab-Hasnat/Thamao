@@ -1,4 +1,5 @@
-import { Ribbon, SquareLibrary } from 'lucide-react';
+
+import { ShieldPlus } from 'lucide-react';
 import React from 'react'
 
 const Logo = ({ size }: { size: number }) => {
@@ -30,11 +31,11 @@ const Logo = ({ size }: { size: number }) => {
 
   return (
     <a href="/dashboard" className="flex items-center gap-2">
-      <SquareLibrary className={`stroke stroke-emerald-500 stroke-[1.5] mr-4 ${sizeClass.split(' ').slice(1).join(' ')}`} />
+      <ShieldPlus className={`stroke stroke-emerald-500 stroke-[1.5] mr-4 ${sizeClass.split(' ').slice(1).join(' ')}`} />
       <p
         className={`bg-gradient-to-r from-emerald-400 to-emerald-600 dark:from-emerald-50 dark:to-emerald-300 bg-clip-text font-bold leading-tight tracking-tighter text-transparent ${sizeClass.split(' ')[0]}`}
       >
-        EduScale
+        Thamao
       </p>
     </a>
   );
