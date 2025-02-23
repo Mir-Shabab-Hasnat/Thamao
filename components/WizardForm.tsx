@@ -5,6 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useRouter } from "next/navigation"
 import { useUser } from "@clerk/nextjs"
 import { useState } from "react"
+import { useMutation } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { WizardFormSchema, type WizardFormValues } from "@/schema/WizardFormSchema"
 import { Button } from "@/components/ui/button"
 import {
@@ -43,22 +45,35 @@ const WizardForm = () => {
     },
   })
 
-  const onSubmit = async (data: WizardFormValues) => {
-    try {
-      const response = await fetch('/api/user', {
-        method: 'POST',
+  const mutation = useMutation({
+    mutationFn: async (data: WizardFormValues) => {
+      const response = await fetch("/api/user", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       })
-
-      if (!response.ok) throw new Error('Failed to create user')
       
-      router.push('/dashboard')
-    } catch (error) {
-      console.error('Error:', error)
-    }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.error || "Failed to create user");
+      }
+      
+      return response.json()
+    },
+    onSuccess: () => {
+      toast.success("Profile created successfully!")
+      router.push("/dashboard")
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Something went wrong. Please try again.")
+      console.error("Error creating profile:", error)
+    },
+  })
+
+  const onSubmit = (data: WizardFormValues) => {
+    mutation.mutate(data)
   }
 
   const steps = [
@@ -244,14 +259,18 @@ const WizardForm = () => {
                   <FormField
                     control={form.control}
                     name="dateOfBirth"
-                    render={({ field: { value, onChange, ...fieldProps } }) => (
+                    render={({ field }) => (
                       <FormItem>
                         <FormLabel>Date of Birth</FormLabel>
                         <FormControl>
                           <Input 
-                            {...fieldProps}
-                            value={typeof value === 'string' ? value : ''}
-                            onChange={(e) => onChange(e.target.value)}
+                            {...field}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === '' || /^\d{0,2}(\/\d{0,2}(\/\d{0,4})?)?$/.test(value)) {
+                                field.onChange(value);
+                              }
+                            }}
                             type="text"
                             placeholder="DD/MM/YYYY" 
                           />
@@ -270,8 +289,12 @@ const WizardForm = () => {
                     >
                       Previous
                     </Button>
-                    <Button type="submit" className="w-full">
-                      Submit
+                    <Button 
+                      type="submit" 
+                      className="w-full"
+                      disabled={mutation.isPending}
+                    >
+                      {mutation.isPending ? "Creating..." : "Submit"}
                     </Button>
                   </div>
                 </div>

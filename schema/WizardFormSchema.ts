@@ -14,11 +14,19 @@ export const WizardFormSchema = z.object({
     .min(10, "Phone number must be at least 10 characters")
     .optional(),
   dateOfBirth: z.string()
-    .regex(/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/, "Date must be in DD/MM/YYYY format")
-    .transform((date) => {
-      const [day, month, year] = date.split('/')
-      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
-    })
+    .refine((date) => {
+      // Check format
+      if (!/^\d{2}\/\d{2}\/\d{4}$/.test(date)) return false;
+      
+      // Parse date parts
+      const [day, month, year] = date.split('/').map(Number);
+      
+      // Check if date is valid
+      const dateObj = new Date(year, month - 1, day);
+      return dateObj.getDate() === day && 
+             dateObj.getMonth() === month - 1 && 
+             dateObj.getFullYear() === year;
+    }, "Please enter a valid date in DD/MM/YYYY format")
     .optional(),
 })
 
